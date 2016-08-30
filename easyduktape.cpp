@@ -92,7 +92,7 @@ bool eDUK::RegisterFunction(char* name, duk_c_function func, int nargs)
 bool eDUK::RegisterObject(char* name)
 {
 	if (this->ctx == nullptr) return false;
-	if (duk_get_top_index(this->ctx) < 0)
+	if (duk_get_top(this->ctx) == 0)
 		duk_push_global_object(this->ctx);
 	duk_push_object(this->ctx);
 	bool success = duk_put_prop_string(this->ctx, -2, name) == 1;
