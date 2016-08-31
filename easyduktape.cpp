@@ -50,10 +50,10 @@ bool eDUK::InitEvents()
 	if (duk_pcall(this->ctx, 0) != 0)
 	{
 		printf("Error: Failed to Init event system. %s\n", duk_safe_to_string(this->ctx, -1));
-		duk_pop(this->ctx);
+		this->pop();
 		return false;
 	}
-	duk_pop_n(this->ctx, duk_get_top(ctx));
+	this->pop();
 	return true;
 }
 
@@ -65,16 +65,16 @@ bool eDUK::LoadScript(char* scriptname)
 	if (duk_pcompile_file(this->ctx, 0, scriptname) != 0)
 	{
 		printf("Error: Failed to compile (%s). %s\n", scriptname, duk_safe_to_string(this->ctx, -1));
-		duk_pop(this->ctx);
+		this->pop();
 		return false;
 	}
 	if (duk_pcall(this->ctx, 0) != 0)
 	{
 		printf("Error: Failed to execute (%s). %s\n", scriptname, duk_safe_to_string(this->ctx, -1));
-		duk_pop(this->ctx);
+		this->pop();
 		return false;
 	}
-	duk_pop_n(this->ctx, duk_get_top(ctx));
+	this->pop();
 	return true;
 }
 
@@ -85,7 +85,7 @@ bool eDUK::RegisterFunction(char* name, duk_c_function func, int nargs)
 		duk_push_global_object(this->ctx);
 	duk_push_c_function(this->ctx, func, nargs);
 	bool success = duk_put_prop_string(this->ctx, -2, name) == 1;
-	duk_pop_n(this->ctx, duk_get_top(this->ctx));
+	this->pop();
 	return success;
 }
 
@@ -96,7 +96,7 @@ bool eDUK::RegisterObject(char* name)
 		duk_push_global_object(this->ctx);
 	duk_push_object(this->ctx);
 	bool success = duk_put_prop_string(this->ctx, -2, name) == 1;
-	duk_pop_n(this->ctx, duk_get_top(this->ctx));
+	this->pop();
 	return success;
 }
 
@@ -118,7 +118,7 @@ bool eDUK::CallFunction(const char* name, const char* format, ...)
 	duk_get_prop_string(this->ctx, -1, name);
 	if (duk_is_null_or_undefined(this->ctx, -1))
 	{
-		duk_pop_2(this->ctx);
+		this->pop();
 		printf("Runtime error: Function (%s) doesn't exist\n", name);
 		return false;
 	}
@@ -150,7 +150,7 @@ bool eDUK::CallFunction(const char* name, const char* format, ...)
 	{
 		printf("Runtime error: %s\n", duk_safe_to_string(this->ctx, -1));
 	}
-	duk_pop_n(this->ctx, duk_get_top(this->ctx));
+	this->pop();
 	return success;
 }
 
@@ -160,7 +160,7 @@ void eDUK::RegisterEvent()
 	duk_eval_string(this->ctx, "ev");
 	duk_new(this->ctx, 0);
 	duk_put_prop_string(this->ctx, -3, "ev");
-	duk_pop_n(this->ctx, duk_get_top(this->ctx));
+	this->pop();
 }
 
 bool eDUK::FireEvent(const char* eventname, const char* format, ...)
@@ -172,7 +172,7 @@ bool eDUK::FireEvent(const char* eventname, const char* format, ...)
 
 	if (duk_is_null_or_undefined(this->ctx, -1))
 	{
-		duk_pop_n(this->ctx, duk_get_top(this->ctx));
+		this->pop();
 		printf("Runtime error: event (%s) does not exist\n", eventname);
 		return false;
 	}
@@ -215,4 +215,11 @@ bool eDUK::FireEvent(const char* eventname, const char* format, ...)
 bool eDUK::IsContext(duk_context* g_ctx)
 {
 	return this->ctx == g_ctx;
+}
+
+int eDUK::pop(int n)
+{
+	int old_top = duk_get_top(this->ctx);
+	duk_pop_n(this->ctx, n == 0 ? old_top : n);
+	return n == 0 ? old_top : n;
 }

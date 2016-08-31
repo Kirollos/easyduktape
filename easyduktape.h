@@ -38,6 +38,7 @@ public:
 	void RegisterEvent();
 	bool FireEvent(const char* eventname, const char* format, ...);
 	bool IsContext(duk_context* g_ctx);
+	int pop(int n = 0);
 };
 
 #endif
