@@ -21,6 +21,8 @@
 #include "duktape.h" // 1.5.0
 #include <vector>
 
+#define EDUK_FUNCTION(func_name) duk_ret_t func_name (duk_context* ctx)
+
 class eDUK
 {
 private:
@@ -33,7 +35,9 @@ public:
 	bool LoadScript(char* scriptname);
 	bool RegisterFunction(char* name, duk_c_function func, int nargs);
 	bool RegisterObject(char* name);
+	bool RegisterVariable(char* name, duk_int32_t type, void* value);
 	eDUK* GetObject(char* name);
+	eDUK* GetGlobalObject();
 	bool CallFunction(const char* name, const char* format, ...);
 	void RegisterEvent();
 	bool FireEvent(const char* eventname, const char* format, ...);

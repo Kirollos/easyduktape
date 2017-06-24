@@ -100,11 +100,46 @@ bool eDUK::RegisterObject(char* name)
 	return success;
 }
 
+bool eDUK::RegisterVariable(char* name, duk_int_t type, void* value)
+{
+	if (this->ctx == nullptr) return false;
+	if (duk_get_top(this->ctx) == 0)
+		duk_push_global_object(this->ctx);
+	switch (type)
+	{
+	case DUK_TYPE_BOOLEAN:
+		duk_push_boolean(this->ctx, (duk_bool_t)value);
+		break;
+	case DUK_TYPE_NULL:
+		duk_push_null(this->ctx);
+		break;
+	case DUK_TYPE_NUMBER:
+		duk_push_int(this->ctx, (duk_int_t)value);
+		break;
+	case DUK_TYPE_STRING:
+		duk_push_string(this->ctx, (const char*)value);
+		break;
+	case DUK_TYPE_UNDEFINED:
+	default:
+		duk_push_undefined(this->ctx);
+		break;
+	}
+	bool success = duk_put_prop_string(this->ctx, -2, name) == 1;
+	this->pop();
+	return success;
+}
+
 eDUK* eDUK::GetObject(char* name)
 {
 	if (duk_get_top(this->ctx) == 0)
 		duk_push_global_object(this->ctx);
 	duk_get_prop_string(this->ctx, -1, name);
+	return this;
+}
+
+eDUK* eDUK::GetGlobalObject()
+{
+	duk_push_global_object(this->ctx);
 	return this;
 }
 
